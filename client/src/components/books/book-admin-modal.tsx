@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Dialog, 
   DialogContent, 
@@ -83,7 +83,7 @@ export function BookAdminModal({ book, isOpen, onClose }: BookAdminModalProps) {
   });
   
   // Reset form when book changes
-  useState(() => {
+  useEffect(() => {
     if (book && isOpen) {
       form.reset({
         isbn: book.isbn,
@@ -96,7 +96,7 @@ export function BookAdminModal({ book, isOpen, onClose }: BookAdminModalProps) {
         status: book.status
       });
     }
-  });
+  }, [book, isOpen, form]);
 
   // Update book mutation
   const updateMutation = useMutation({

@@ -25,3 +25,36 @@
 .animate-scan-line {
   animation: scan-line 2s linear infinite;
 }
+
+/* Book spine transitions */
+.book-spine:hover {
+  z-index: 10;
+}
+
+.book-spine:hover::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 0;
+  right: 0;
+  height: 10px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 50%;
+  filter: blur(3px);
+  transform: scaleX(0.8);
+  transition: transform 0.3s ease;
+}
+
+/* Shelf appearance */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.book-spine:nth-child(odd):hover {
+  animation: float 2s ease infinite;
+}

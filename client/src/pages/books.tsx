@@ -25,13 +25,23 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { BookDetailModal } from "@/components/books/book-detail-modal";
+import { BookAdminModal } from "@/components/books/book-admin-modal";
 import { CheckoutModal } from "@/components/circulation/checkout-modal";
+import { InteractiveBookshelf } from "@/components/books/interactive-bookshelf";
 import { BOOK_CATEGORIES, BOOK_STATUS } from "@shared/schema";
 import { Book } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useLocation } from "wouter";
-import { Plus, Search } from "lucide-react";
+import { 
+  Plus, 
+  Search, 
+  LayoutList, 
+  Library, 
+  QrCode 
+} from "lucide-react";
+import { BarcodeScannerModal } from "@/components/books/barcode-scanner-modal";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Books() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -39,9 +49,13 @@ export default function Books() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
+  const [isScannerModalOpen, setIsScannerModalOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<"table" | "bookshelf">("bookshelf");
   
   const [location, navigate] = useLocation();
+  const { toast } = useToast();
   
   const { data: books, isLoading } = useQuery<Book[]>({
     queryKey: ['/api/books'],
@@ -66,9 +80,37 @@ export default function Books() {
     setIsDetailModalOpen(true);
   };
 
+  const handleAdminDetails = (book: Book) => {
+    setSelectedBook(book);
+    setIsAdminModalOpen(true);
+  };
+
   const handleCheckout = (book: Book) => {
     setSelectedBook(book);
     setIsCheckoutModalOpen(true);
+  };
+
+  const handleScanResult = (barcode: string) => {
+    // Close scanner
+    setIsScannerModalOpen(false);
+    
+    // Set search term
+    setSearchTerm(barcode);
+    
+    // Find book with this barcode/ISBN
+    const foundBook = books?.find(b => b.isbn === barcode);
+    
+    if (foundBook) {
+      // Show book details
+      setSelectedBook(foundBook);
+      setIsDetailModalOpen(true);
+    } else {
+      toast({
+        title: "Book not found",
+        description: `No book found with ISBN/barcode: ${barcode}`,
+        variant: "destructive"
+      });
+    }
   };
 
   // Generate status badge
@@ -97,13 +139,21 @@ export default function Books() {
           <h1 className="text-2xl font-bold">Books Catalog</h1>
           <p className="text-gray-500">Manage your library collection</p>
         </div>
-        <Button 
-          className="mt-4 md:mt-0"
-          onClick={() => navigate("/books/new")}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Add New Book
-        </Button>
+        <div className="flex flex-wrap gap-2 mt-4 md:mt-0">
+          <Button
+            variant="outline"
+            onClick={() => setIsScannerModalOpen(true)}
+          >
+            <QrCode className="mr-2 h-4 w-4" />
+            Scan Barcode
+          </Button>
+          <Button 
+            onClick={() => navigate("/add-book")}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add New Book
+          </Button>
+        </div>
       </div>
       
       <Card className="mb-6">
@@ -112,7 +162,7 @@ export default function Books() {
           <CardDescription>Find books by title, author, or ISBN</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div className="md:col-span-2">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
@@ -158,91 +208,149 @@ export default function Books() {
                 </SelectContent>
               </Select>
             </div>
+            
+            <div className="flex justify-end">
+              <div className="flex border rounded-md overflow-hidden">
+                <Button
+                  variant={viewMode === "bookshelf" ? "default" : "ghost"}
+                  size="sm"
+                  className="rounded-none px-3"
+                  onClick={() => setViewMode("bookshelf")}
+                >
+                  <Bookshelf className="h-4 w-4" />
+                  <span className="sr-only">Bookshelf View</span>
+                </Button>
+                <Button
+                  variant={viewMode === "table" ? "default" : "ghost"}
+                  size="sm"
+                  className="rounded-none px-3"
+                  onClick={() => setViewMode("table")}
+                >
+                  <LayoutList className="h-4 w-4" />
+                  <span className="sr-only">Table View</span>
+                </Button>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
       
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle>Book Inventory</CardTitle>
-          <CardDescription>
-            {isLoading 
-              ? "Loading books..." 
-              : `${filteredBooks.length} book${filteredBooks.length !== 1 ? 's' : ''} found`}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Author</TableHead>
-                  <TableHead>ISBN</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  [...Array(5)].map((_, i) => (
-                    <TableRow key={i}>
-                      <TableCell><Skeleton className="h-5 w-full" /></TableCell>
-                      <TableCell><Skeleton className="h-5 w-full" /></TableCell>
-                      <TableCell><Skeleton className="h-5 w-full" /></TableCell>
-                      <TableCell><Skeleton className="h-5 w-full" /></TableCell>
-                      <TableCell><Skeleton className="h-5 w-20" /></TableCell>
-                      <TableCell><Skeleton className="h-5 w-full" /></TableCell>
-                    </TableRow>
-                  ))
-                ) : filteredBooks.length > 0 ? (
-                  filteredBooks.map((book) => (
-                    <TableRow key={book.id}>
-                      <TableCell className="font-medium">{book.title}</TableCell>
-                      <TableCell>{book.author}</TableCell>
-                      <TableCell>{book.isbn}</TableCell>
-                      <TableCell>{book.category}</TableCell>
-                      <TableCell>{getStatusBadge(book.status)}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleViewDetails(book)}
-                          >
-                            Details
-                          </Button>
-                          
-                          {book.status === "Available" && (
+      {/* Book collection view - either table or bookshelf */}
+      {viewMode === "bookshelf" ? (
+        <div className="mb-6">
+          {isLoading ? (
+            <Card className="p-6">
+              <div className="h-48 flex items-center justify-center">
+                <Skeleton className="h-36 w-full rounded-lg" />
+              </div>
+            </Card>
+          ) : (
+            <InteractiveBookshelf
+              books={filteredBooks}
+              onBookClick={handleViewDetails}
+              onAdminClick={handleAdminDetails}
+              isAdmin={true}
+            />
+          )}
+        </div>
+      ) : (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle>Book Inventory</CardTitle>
+            <CardDescription>
+              {isLoading 
+                ? "Loading books..." 
+                : `${filteredBooks.length} book${filteredBooks.length !== 1 ? 's' : ''} found`}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Author</TableHead>
+                    <TableHead>ISBN</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isLoading ? (
+                    [...Array(5)].map((_, i) => (
+                      <TableRow key={i}>
+                        <TableCell><Skeleton className="h-5 w-full" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-full" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-full" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-full" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-20" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-full" /></TableCell>
+                      </TableRow>
+                    ))
+                  ) : filteredBooks.length > 0 ? (
+                    filteredBooks.map((book) => (
+                      <TableRow key={book.id}>
+                        <TableCell className="font-medium">{book.title}</TableCell>
+                        <TableCell>{book.author}</TableCell>
+                        <TableCell>{book.isbn}</TableCell>
+                        <TableCell>{book.category}</TableCell>
+                        <TableCell>{getStatusBadge(book.status)}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
                             <Button
                               size="sm"
-                              onClick={() => handleCheckout(book)}
+                              variant="outline"
+                              onClick={() => handleViewDetails(book)}
                             >
-                              Checkout
+                              Details
                             </Button>
-                          )}
-                        </div>
+                            
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleAdminDetails(book)}
+                            >
+                              Edit
+                            </Button>
+                            
+                            {book.status === "Available" && (
+                              <Button
+                                size="sm"
+                                onClick={() => handleCheckout(book)}
+                              >
+                                Checkout
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-10 text-gray-500">
+                        No books found matching your criteria
                       </TableCell>
                     </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-10 text-gray-500">
-                      No books found matching your criteria
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
       
+      {/* Modals */}
       <BookDetailModal 
         book={selectedBook}
         isOpen={isDetailModalOpen}
         onClose={() => setIsDetailModalOpen(false)}
+      />
+      
+      <BookAdminModal
+        book={selectedBook}
+        isOpen={isAdminModalOpen}
+        onClose={() => setIsAdminModalOpen(false)}
       />
       
       {selectedBook && (
@@ -252,6 +360,12 @@ export default function Books() {
           preselectedBookId={selectedBook.id}
         />
       )}
+      
+      <BarcodeScannerModal
+        isOpen={isScannerModalOpen}
+        onClose={() => setIsScannerModalOpen(false)}
+        onScan={handleScanResult}
+      />
     </div>
   );
 }
