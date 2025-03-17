@@ -217,7 +217,7 @@ export default function Books() {
                   className="rounded-none px-3"
                   onClick={() => setViewMode("bookshelf")}
                 >
-                  <Bookshelf className="h-4 w-4" />
+                  <Library className="h-4 w-4" />
                   <span className="sr-only">Bookshelf View</span>
                 </Button>
                 <Button
