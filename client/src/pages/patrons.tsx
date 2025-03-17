@@ -22,10 +22,13 @@ import { Badge } from "@/components/ui/badge";
 import { useLocation } from "wouter";
 import { Search, Plus, UserPlus } from "lucide-react";
 import { Patron, Transaction } from "@shared/schema";
+import { PatronDetailModal } from "@/components/patrons/patron-detail-modal";
 
 export default function Patrons() {
   const [searchTerm, setSearchTerm] = useState("");
   const [location, navigate] = useLocation();
+  const [selectedPatron, setSelectedPatron] = useState<Patron | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   
   const { data: patrons, isLoading } = useQuery<Patron[]>({
     queryKey: ['/api/patrons'],
@@ -167,7 +170,10 @@ export default function Patrons() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => navigate(`/patrons/${patron.id}`)}
+                              onClick={() => {
+                                setSelectedPatron(patron);
+                                setIsDetailModalOpen(true);
+                              }}
                             >
                               View Profile
                             </Button>
@@ -188,6 +194,13 @@ export default function Patrons() {
           </div>
         </CardContent>
       </Card>
+      
+      {/* Patron Detail Modal */}
+      <PatronDetailModal
+        patron={selectedPatron}
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+      />
     </div>
   );
 }
