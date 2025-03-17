@@ -3,7 +3,7 @@ import { Input } from "./input";
 import { Badge } from "./badge";
 import { ThemeToggle } from "./theme-toggle";
 
-export function AppBar() {
+export function App_Bar() {
   return (
     <div className="flex items-center justify-between p-4 border-b">
       <div className="flex items-center gap-4">
