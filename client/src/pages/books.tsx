@@ -35,8 +35,8 @@ import { Plus, Search } from "lucide-react";
 
 export default function Books() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<string>("");
-  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
@@ -54,8 +54,8 @@ export default function Books() {
       book.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
       book.isbn.includes(searchTerm);
     
-    const matchesCategory = !categoryFilter || book.category === categoryFilter;
-    const matchesStatus = !statusFilter || book.status === statusFilter;
+    const matchesCategory = categoryFilter === "all" || book.category === categoryFilter;
+    const matchesStatus = statusFilter === "all" || book.status === statusFilter;
     
     return matchesSearch && matchesCategory && matchesStatus;
   }) : [];
@@ -134,7 +134,7 @@ export default function Books() {
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="all">All Categories</SelectItem>
                   {BOOK_CATEGORIES.map((category) => (
                     <SelectItem key={category} value={category}>{category}</SelectItem>
                   ))}
@@ -151,7 +151,7 @@ export default function Books() {
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Statuses</SelectItem>
+                  <SelectItem value="all">All Statuses</SelectItem>
                   {BOOK_STATUS.map((status) => (
                     <SelectItem key={status} value={status}>{status}</SelectItem>
                   ))}
