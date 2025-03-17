@@ -49,18 +49,15 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <Link 
                   href={item.path}
                   onClick={onClose}
+                  className={cn(
+                    "flex items-center px-6 py-3 text-sm hover:bg-gray-100",
+                    location === item.path 
+                      ? "bg-blue-50 text-primary border-l-4 border-primary"
+                      : "text-gray-700"
+                  )}
                 >
-                  <a 
-                    className={cn(
-                      "flex items-center px-6 py-3 text-sm hover:bg-gray-100",
-                      location === item.path 
-                        ? "bg-blue-50 text-primary border-l-4 border-primary"
-                        : "text-gray-700"
-                    )}
-                  >
-                    <span className="material-icons mr-3 text-sm">{item.icon}</span>
-                    {item.label}
-                  </a>
+                  <span className="material-icons mr-3 text-sm">{item.icon}</span>
+                  {item.label}
                 </Link>
               </li>
             ))}
@@ -88,8 +85,11 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               </div>
             </div>
           ) : (
-            <Link href="/login">
-              <a className="text-sm text-primary hover:underline">Login</a>
+            <Link 
+              href="/login"
+              className="text-sm text-primary hover:underline"
+            >
+              Login
             </Link>
           )}
         </div>
