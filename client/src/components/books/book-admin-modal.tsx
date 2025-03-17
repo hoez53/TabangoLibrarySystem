@@ -102,10 +102,7 @@ export function BookAdminModal({ book, isOpen, onClose }: BookAdminModalProps) {
   const updateMutation = useMutation({
     mutationFn: async (data: BookFormValues) => {
       if (!book) return null;
-      return apiRequest<Book>(`/api/books/${book.id}`, {
-        method: "PUT",
-        data
-      });
+      return apiRequest("PUT", `/api/books/${book.id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/books'] });
@@ -128,9 +125,7 @@ export function BookAdminModal({ book, isOpen, onClose }: BookAdminModalProps) {
   const deleteMutation = useMutation({
     mutationFn: async () => {
       if (!book) return null;
-      return apiRequest(`/api/books/${book.id}`, {
-        method: "DELETE"
-      });
+      return apiRequest("DELETE", `/api/books/${book.id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/books'] });
@@ -319,7 +314,12 @@ export function BookAdminModal({ book, isOpen, onClose }: BookAdminModalProps) {
                       <Textarea 
                         placeholder="Book description" 
                         className="min-h-[100px]" 
-                        {...field} 
+                        value={field.value || ""} 
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        ref={field.ref}
+                        name={field.name}
+                        disabled={field.disabled}
                       />
                     </FormControl>
                     <FormMessage />
