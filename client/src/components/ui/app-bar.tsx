@@ -3,6 +3,21 @@ import { Input } from "./input";
 import { Badge } from "./badge";
 import { ThemeToggle } from "./theme-toggle";
 
+export function AppBar() {
+  return (
+    <div className="flex items-center justify-between p-4 border-b">
+      <div className="flex items-center gap-4">
+        <MenuIcon className="h-6 w-6" />
+        <Input placeholder="Search..." className="w-64" />
+      </div>
+      <div className="flex items-center gap-4">
+        <ThemeToggle />
+        <Bell className="h-6 w-6" />
+      </div>
+    </div>
+  );
+}
+
 interface AppBarProps {
   title: string;
   onMenuClick: () => void;
