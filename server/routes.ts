@@ -1,5 +1,21 @@
-import express, { type Express, Request, Response } from "express";
+import express, { type Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
+import session from "express-session";
+
+// Extend Express Request type to include session
+declare module "express-session" {
+  interface SessionData {
+    userId: number;
+    role: string;
+  }
+}
+
+// Declare session on Request type
+declare module "express" {
+  interface Request {
+    session: session.Session & Partial<session.SessionData>;
+  }
+}
 import { storage } from "./storage";
 import { z } from "zod";
 import {
